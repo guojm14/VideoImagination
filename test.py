@@ -7,7 +7,6 @@ import tensorflow as tf
 from ops import *
 from utils import *
 from glob import glob
-from caffe_classes import class_names
 
 class Vid_Imagine_Test(object):
   def __init__(self, sess,

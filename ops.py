@@ -15,7 +15,7 @@ def conv2d_apply(stimage, kernels, self):
   for kernel_t in kernel_times:
     kernel_t = tf.reshape(kernel_t,
         [self.batch_size, self.conv_size, self.conv_size, 1, self.sequence_len])
-    kernel_t = tf.tile(kernel_t,[1,1,1,self.c_dim])
+    kernel_t = tf.tile(kernel_t,[1,1,1,self.c_dim,1])
     kernel_t = tf.nn.relu(kernel_t - 1e-12) + 1e-12
     kernel_t /= tf.reduce_sum(kernel_t, [1, 2, 3], keep_dims=True)
     kernel_batchs = tf.split(kernel_t, self.batch_size, 0)
@@ -29,6 +29,7 @@ def conv2d_apply(stimage, kernels, self):
     transformed = tf.split(transformed, self.sequence_len, axis=3)
     transformed = tf.stack(transformed, axis=1)
     frames.append(transformed)
+    print frames
   return frames
 
 def affine_apply(stimage, kernels, self):
@@ -67,7 +68,7 @@ def volumetric_apply(layered_image, stimage, raw_trans_1, raw_trans_2,self):
 
   trans_b = tf.reshape(
           tf.nn.softmax(tf.reshape(raw_trans_2, [-1, self.sequence_len])),
-          [int(self.batch_size), self.input_width, self.input_height, self.sequence_len])
+          [int(self.batch_size), self.image_width, self.image_height, self.sequence_len])
   mask_list = tf.split(trans_b, self.sequence_len, axis = 3)
 
   ## with conv3d
@@ -88,17 +89,17 @@ def volumetric_apply(layered_image, stimage, raw_trans_1, raw_trans_2,self):
 
     image_filters_1 = tf.split(image_d3ed, self.sequence_len, axis=1)
 
-    output_1 = tf.zeors(stimage.get_shape())
-    for layer_1, layer_2, mask in zip(image_filters_1, image_filters_2, mask_list[1:]):
+    output_1 = tf.zeros(stimage.get_shape())
+    for layer_1, mask in zip(image_filters_1, mask_list[1:]):
       output_1 += tf.squeeze(layer_1,axis=1) * mask
 
     frames_1.append(output_1)
 
   vid_1 = tf.stack(frames_1, axis=1)
 
-  return vid_1, vid_2 #vid_1 con3d
+  return vid_1 #vid_1 con3d
 
-def transformer(U, theta, out_size=[240,320], name='SpatialTransformer', **kwargs):
+def transformer(U, theta, out_size=[128,128], name='SpatialTransformer', **kwargs):
     """
     From https://github.com/skaae/transformer_network/blob/master/transformerlayer.py
     """

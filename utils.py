@@ -11,7 +11,7 @@ import scipy.misc
 import numpy as np
 from time import gmtime, strftime
 from six.moves import xrange
-
+from PIL import Image
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
 
@@ -27,7 +27,12 @@ def save_images(images, size, image_path):
   # images = (images+1.)/2.
   puzzle = merge(images, size)
   return scipy.misc.imsave(image_path, puzzle)
-
+def save_gif(images,length,size,gifpath):
+    savegif=[]
+    im=Image.fromarray(np.uint8(merge(images[:,0,:,:,:],size)))
+    for times in xrange(1,length):
+        savegif.append(Image.fromarray(np.uint8(merge(images[:,times,:,:,:],size))))
+    im.save(gifpath, save_all=True, append_images=savegif,loop=0,fps=25,duration=200,comment=b"gif saved")
 def merge(images, size):
   cdim = images.shape[-1]
   h, w = images.shape[1], images.shape[2]
